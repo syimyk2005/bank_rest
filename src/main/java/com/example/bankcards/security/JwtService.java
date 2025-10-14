@@ -1,10 +1,10 @@
-package org.example.boxy.auth_service.service;
+package com.example.bankcards.security;
 
+import com.example.bankcards.entity.User;
+import com.example.bankcards.repository.TokenRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.example.boxy.auth_service.model.entity.User;
-import org.example.boxy.auth_service.repository.TokenRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -38,21 +38,20 @@ public class JwtService {
     public boolean isValid(String token, UserDetails user) {
         String username = extractUsername(token);
 
-        boolean existsAndNotLoggedOut = tokenRepository.findByToken(token)
+        boolean existsAndNotLoggedOut = tokenRepository.findByAccessToken(token)
                 .map(t -> !t.isRevoked())
                 .orElse(false);
 
-        return username.equals(user.getUsername()) && !isTokenExpired(token) && existsAndNotLoggedOut;
+        return username.equals(user.getUsername()) && isTokenExpired(token) && existsAndNotLoggedOut;
     }
-
 
     public boolean isValidRefreshToken(String token, User user) {
         String username = extractUsername(token);
-        return (username.equals(user.getUsername())) && !isTokenExpired(token);
+        return (username.equals(user.getUsername())) && isTokenExpired(token);
     }
 
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        return !extractExpiration(token).before(new Date());
     }
 
     public Date extractExpiration(String token) {
@@ -90,7 +89,6 @@ public class JwtService {
                 .signWith(getSignKey())
                 .compact();
     }
-
 
     public SecretKey getSignKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes());

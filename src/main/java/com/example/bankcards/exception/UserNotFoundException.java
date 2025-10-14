@@ -1,4 +1,4 @@
-package org.example.boxy.auth_service.exception;
+package com.example.bankcards.exception;
 
 public class UserNotFoundException extends RuntimeException {
     public UserNotFoundException(String message) {

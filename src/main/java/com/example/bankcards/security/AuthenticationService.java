@@ -1,16 +1,15 @@
-package org.example.boxy.auth_service.service;
+package com.example.bankcards.security;
 
-
+import com.example.bankcards.dto.AuthResponse;
+import com.example.bankcards.dto.TokenResponse;
+import com.example.bankcards.dto.UserRequestDto;
+import com.example.bankcards.entity.Token;
+import com.example.bankcards.entity.User;
+import com.example.bankcards.mapper.UserMapper;
+import com.example.bankcards.repository.TokenRepository;
+import com.example.bankcards.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.example.boxy.auth_service.mapper.UserMapper;
-import org.example.boxy.auth_service.model.dto.AuthResponse;
-import org.example.boxy.auth_service.model.dto.TokenResponse;
-import org.example.boxy.auth_service.model.dto.UserRequestDto;
-import org.example.boxy.auth_service.model.entity.Token;
-import org.example.boxy.auth_service.model.entity.User;
-import org.example.boxy.auth_service.repository.TokenRepository;
-import org.example.boxy.auth_service.repository.UserRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,8 +33,7 @@ public class AuthenticationService {
     private final UserMapper userMapper;
 
     public AuthResponse register(UserRequestDto request) {
-
-        User user = userMapper.toModel(request);
+        User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user = repository.save(user);
 
@@ -44,7 +42,7 @@ public class AuthenticationService {
 
         saveUserToken(accessToken, user);
 
-        return new AuthResponse(request.getUsername(), accessToken, refreshToken);
+        return new AuthResponse(accessToken, refreshToken);
     }
 
     public AuthResponse authenticate(UserRequestDto request) {
@@ -61,22 +59,24 @@ public class AuthenticationService {
 
         revokeAllTokenByUser(user);
         saveUserToken(accessToken, user);
-        return new AuthResponse(request.getUsername(), accessToken, refreshToken);
+        return new AuthResponse(accessToken, refreshToken);
 
     }
 
-    public ResponseEntity refresh(HttpServletRequest request) {
+    public ResponseEntity<TokenResponse> refresh(HttpServletRequest request) {
 
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return new ResponseEntity(HttpStatus.UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         String token = authHeader.substring(7);
 
         String username = jwtService.extractUsername(token);
 
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("not found"));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
         if (jwtService.isValidRefreshToken(token, user)) {
 
             String accessToken = jwtService.generateAccessToken(user);
@@ -85,14 +85,17 @@ public class AuthenticationService {
             revokeAllTokenByUser(user);
             saveUserToken(accessToken, user);
 
-            return new ResponseEntity(new TokenResponse(accessToken, refreshToken), HttpStatus.OK);
+            TokenResponse response = new TokenResponse(accessToken, refreshToken);
+            return ResponseEntity.ok(response);
         }
-        return new ResponseEntity((HttpStatus.UNAUTHORIZED));
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
+
 
     public void saveUserToken(String tokenStr, User user) {
         Token token = new Token();
-        token.setToken(tokenStr);
+        token.setAccessToken(tokenStr);
         token.setRevoked(false);
         token.setExpireDate(jwtService.extractExpiration(tokenStr));
         token.setUser(user);
@@ -102,9 +105,7 @@ public class AuthenticationService {
     public void revokeAllTokenByUser(User user) {
         List<Token> validTokenListByUser = tokenRepository.findAllTokenByUser(user.getId());
         if (!validTokenListByUser.isEmpty()) {
-            validTokenListByUser.forEach(t -> {
-                t.setRevoked(true);
-            });
+            validTokenListByUser.forEach(t -> t.setRevoked(true));
         }
     }
 

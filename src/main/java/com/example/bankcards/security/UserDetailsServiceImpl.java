@@ -1,7 +1,7 @@
-package org.example.boxy.auth_service.service;
+package com.example.bankcards.security;
 
 
-import org.example.boxy.auth_service.repository.UserRepository;
+import com.example.bankcards.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

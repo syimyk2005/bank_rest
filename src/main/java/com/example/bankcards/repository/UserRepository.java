@@ -1,14 +1,14 @@
-package org.example.boxy.auth_service.repository;
+package com.example.bankcards.repository;
 
-import org.example.boxy.auth_service.model.entity.User;
+import com.example.bankcards.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+@Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
 
     void deleteById(Long id);
-
-    Optional<User> findByEmail(String email);
 }

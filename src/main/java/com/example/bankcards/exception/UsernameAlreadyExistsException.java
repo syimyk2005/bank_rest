@@ -1,4 +1,4 @@
-package org.example.boxy.auth_service.exception;
+package com.example.bankcards.exception;
 
 public class UsernameAlreadyExistsException extends RuntimeException {
     public UsernameAlreadyExistsException(String message) {

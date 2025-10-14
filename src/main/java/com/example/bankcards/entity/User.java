@@ -1,5 +1,6 @@
-package org.example.boxy.auth_service.model.entity;
+package com.example.bankcards.entity;
 
+import com.example.bankcards.entity.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,7 +26,6 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 50, unique = true)
     private String username;
 
     @Column(length = 100, unique = true)
@@ -33,9 +33,15 @@ public class User implements UserDetails {
 
     private String password;
 
-    @OneToMany(mappedBy = "user")
-    private List<Token> tokens;
+    @Enumerated(value = EnumType.STRING)
+    @Column(length = 20)
+    private Role role;
 
+    @OneToMany(mappedBy = "user")
+    private transient List<Token> tokens;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private transient List<Card> cards;
 
     @Override
     public boolean isAccountNonExpired() {
@@ -59,6 +65,6 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("USER"));
+        return List.of(new SimpleGrantedAuthority(role.name()));
     }
 }

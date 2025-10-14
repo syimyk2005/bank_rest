@@ -1,19 +1,19 @@
-package org.example.boxy.auth_service.mapper;
+package com.example.bankcards.mapper;
 
 
-import org.example.boxy.auth_service.model.dto.UserRequestDto;
-import org.example.boxy.auth_service.model.dto.UserResponseDto;
-import org.example.boxy.auth_service.model.entity.User;
+import com.example.bankcards.dto.UserRequestDto;
+import com.example.bankcards.dto.UserResponseDto;
+import com.example.bankcards.entity.User;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
+    // @Mapping(target = "role", source = "role")
     UserResponseDto toDto(User user);
 
-    User toModel(UserRequestDto dto);
-
+    User toEntity(UserRequestDto dto);
 }
 
 

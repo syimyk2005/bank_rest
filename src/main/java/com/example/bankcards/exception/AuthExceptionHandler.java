@@ -1,4 +1,4 @@
-package org.example.boxy.auth_service.exception;
+package com.example.bankcards.exception;
 
 import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;
@@ -63,7 +63,7 @@ public class AuthExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    @ExceptionHandler({ AuthenticationException.class, BadCredentialsException.class, JwtException.class })
+    @ExceptionHandler({AuthenticationException.class, BadCredentialsException.class, JwtException.class})
     public ResponseEntity<Map<String, Object>> handleUnauthorized(Exception ex) {
         log.warn("Unauthorized access: {}", ex.getMessage());
         Map<String, Object> response = createErrorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized");

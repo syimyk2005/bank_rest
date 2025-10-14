@@ -1,4 +1,4 @@
-package org.example.boxy.auth_service.config;
+package com.example.bankcards.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -12,8 +12,8 @@ public class OpenApiConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Boxy API")
+                        .title("bank_rest API")
                         .version("1.0")
-                        .description("Api для приложения Boxy."));
+                        .description("Api для приложения bank_rest."));
     }
 }

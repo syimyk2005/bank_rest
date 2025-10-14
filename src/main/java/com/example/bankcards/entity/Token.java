@@ -1,4 +1,4 @@
-package org.example.boxy.auth_service.model.entity;
+package com.example.bankcards.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -21,7 +21,7 @@ public class Token {
 
     @Column(name = "token")
     @NotNull(message = "token is empty.")
-    private String token;
+    private String accessToken;
 
     @Column(name = "is_logged_out")
     private boolean isRevoked;

@@ -1,4 +1,4 @@
-package org.example.boxy.auth_service.model.dto;
+package com.example.bankcards.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
