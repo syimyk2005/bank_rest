@@ -5,7 +5,8 @@ import com.example.bankcards.dto.CardResponseDto;
 import com.example.bankcards.dto.ChangeCardStatusDto;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.User;
-import com.example.bankcards.exception.CardNotFoundException;
+import com.example.bankcards.exception.cardexception.CardNotFoundException;
+import com.example.bankcards.exception.userexception.UserNotFoundException;
 import com.example.bankcards.mapper.CardMapper;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
@@ -30,6 +31,8 @@ public class CardService {
     private final UserRepository userRepository;
 
     public CardResponseDto createCard(CardRequestDto cardRequestDto) {
+        userRepository.findById(cardRequestDto.getUser()).orElseThrow(() -> new UserNotFoundException("User not found with id: " + cardRequestDto.getUser()));
+
         return cardMapper.toDto(
                 cardRepository.save(
                         cardMapper.toEntity(cardRequestDto)
@@ -39,20 +42,23 @@ public class CardService {
 
     public CardResponseDto changeCardStatus(ChangeCardStatusDto status) {
         Card card = cardRepository.findById(status.getCardId())
-                .orElseThrow(() -> new CardNotFoundException("Card with id: " + status.getCardId() + " not found"));
+                .orElseThrow(() -> new CardNotFoundException("Card with id: "
+                        + status.getCardId() + " not found and you can't change status"));
         card.setStatus(status.getStatus());
         return cardMapper.toDto(cardRepository.save(card));
     }
 
     public CardResponseDto findCard(Long id) {
         Card card = cardRepository.findById(id)
-                .orElseThrow(() -> new CardNotFoundException("Card with id: " + id + " not found"));
+                .orElseThrow(() -> new CardNotFoundException("Card with id: " +
+                        id + " not found or doesn't exist"));
         return cardMapper.toDto(card);
     }
 
     public String deleteCard(Long id) {
         Card card = cardRepository.findById(id)
-                .orElseThrow(() -> new CardNotFoundException("Card with id: " + id + " not found"));
+                .orElseThrow(() -> new CardNotFoundException("Card with id: "
+                        + id + " not found or was deleted before"));
         cardRepository.delete(card);
         return "Card with id: " + id + " has been deleted";
     }

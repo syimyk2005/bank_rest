@@ -26,16 +26,23 @@ databaseChangeLog:
               - column:
                   name: expiration_date
                   type: DATE
+                  constraints:
+                    nullable: true
               - column:
                   name: status
-                  type: VARCHAR(50)
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: true
               - column:
                   name: balance
-                  type: BIGINT
-                  defaultValueNumeric: 0
+                  type: DOUBLE PRECISION
+                  constraints:
+                    nullable: true
+
         - addForeignKeyConstraint:
             baseTableName: cards
             baseColumnNames: user_id
+            constraintName: fk_cards_user
             referencedTableName: users
             referencedColumnNames: id
-            constraintName: fk_cards_users
+            onDelete: CASCADE

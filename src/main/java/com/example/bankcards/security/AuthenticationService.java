@@ -1,13 +1,17 @@
 package com.example.bankcards.security;
 
 import com.example.bankcards.dto.AuthResponse;
-import com.example.bankcards.dto.TokenResponse;
+import com.example.bankcards.dto.TokenResponseDto;
 import com.example.bankcards.dto.UserRequestDto;
 import com.example.bankcards.entity.Token;
 import com.example.bankcards.entity.User;
+import com.example.bankcards.exception.userexception.EmailAlreadyExistsException;
+import com.example.bankcards.exception.userexception.UserNotFoundException;
+import com.example.bankcards.exception.userexception.UsernameAlreadyExistsException;
 import com.example.bankcards.mapper.UserMapper;
 import com.example.bankcards.repository.TokenRepository;
 import com.example.bankcards.repository.UserRepository;
+import com.example.bankcards.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -26,19 +30,28 @@ import java.util.List;
 public class AuthenticationService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
     public AuthResponse register(UserRequestDto request) {
+
+        if (repository.findByUsername(request.getUsername()).isPresent()) {
+            throw new UsernameAlreadyExistsException("User with name: " + request.getUsername() + " already exists");
+        }
+
+        if (repository.findByEmail(request.getEmail()).isPresent()) {
+            throw new EmailAlreadyExistsException("User with email: " + request.getUsername() + " already exists");
+        }
+
+
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user = repository.save(user);
-
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        String accessToken = jwtUtil.generateAccessToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
 
         saveUserToken(accessToken, user);
 
@@ -53,9 +66,9 @@ public class AuthenticationService {
                 )
         );
 
-        User user = repository.findByUsername(request.getUsername()).orElseThrow();
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        User user = repository.findByUsername(request.getUsername()).orElseThrow(() -> new UserNotFoundException("User with name: " + request.getUsername() + " does not exist"));
+        String accessToken = jwtUtil.generateAccessToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
 
         revokeAllTokenByUser(user);
         saveUserToken(accessToken, user);
@@ -63,7 +76,7 @@ public class AuthenticationService {
 
     }
 
-    public ResponseEntity<TokenResponse> refresh(HttpServletRequest request) {
+    public ResponseEntity<TokenResponseDto> refresh(HttpServletRequest request) {
 
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -72,20 +85,20 @@ public class AuthenticationService {
 
         String token = authHeader.substring(7);
 
-        String username = jwtService.extractUsername(token);
+        String username = jwtUtil.extractUsername(token);
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if (jwtService.isValidRefreshToken(token, user)) {
+        if (jwtUtil.isValidRefreshToken(token, user)) {
 
-            String accessToken = jwtService.generateAccessToken(user);
-            String refreshToken = jwtService.generateRefreshToken(user);
+            String accessToken = jwtUtil.generateAccessToken(user);
+            String refreshToken = jwtUtil.generateRefreshToken(user);
 
             revokeAllTokenByUser(user);
             saveUserToken(accessToken, user);
 
-            TokenResponse response = new TokenResponse(accessToken, refreshToken);
+            TokenResponseDto response = new TokenResponseDto(accessToken, refreshToken);
             return ResponseEntity.ok(response);
         }
 
@@ -97,7 +110,7 @@ public class AuthenticationService {
         Token token = new Token();
         token.setAccessToken(tokenStr);
         token.setRevoked(false);
-        token.setExpireDate(jwtService.extractExpiration(tokenStr));
+        token.setExpireDate(jwtUtil.extractExpiration(tokenStr));
         token.setUser(user);
         tokenRepository.save(token);
     }

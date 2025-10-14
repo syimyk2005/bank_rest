@@ -6,9 +6,8 @@ import com.example.bankcards.dto.ChangeCardStatusDto;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.User;
 import com.example.bankcards.entity.enums.CardStatus;
-import com.example.bankcards.exception.CardNotFoundException;
+import com.example.bankcards.exception.cardexception.CardNotFoundException;
 import com.example.bankcards.mapper.CardMapper;
-import com.example.bankcards.repository.CardForBlockingRepository;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.util.CardUtil;
@@ -46,9 +45,6 @@ class CardServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    @Mock
-    private CardForBlockingRepository cardForBlockingRepository;
-
     @InjectMocks
     private CardService cardService;
 
@@ -69,9 +65,15 @@ class CardServiceTest {
     @Test
     void createCard_returnsDto() {
         CardRequestDto request = new CardRequestDto();
+        request.setUser(1L); // обязательно
+
+        User user = new User();
+        user.setId(1L);
+
         Card card = new Card();
         CardResponseDto dto = new CardResponseDto();
 
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user)); // замокаем пользователя
         when(cardMapper.toEntity(request)).thenReturn(card);
         when(cardRepository.save(card)).thenReturn(card);
         when(cardMapper.toDto(card)).thenReturn(dto);
@@ -81,6 +83,7 @@ class CardServiceTest {
         assertThat(result).isNotNull();
         verify(cardRepository).save(card);
     }
+
 
     @Test
     void changeCardStatus_updatesStatus() {

@@ -31,27 +31,27 @@ class CardControllerTest {
     private CardRequestDto validRequest;
     private CardResponseDto validResponse;
 
-     @BeforeEach
+    @BeforeEach
     void setUp() {
         cardService = mock(CardService.class);
         CardController cardController = new CardController(cardService);
         mockMvc = MockMvcBuilders.standaloneSetup(cardController).build();
 
         objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule()); // <-- добавляем поддержку LocalDate
+        objectMapper.registerModule(new JavaTimeModule());
 
         validRequest = new CardRequestDto(
                 "1234567812345678",
-                "John Doe",
+                1L,
                 LocalDate.now().plusYears(2),
                 CardStatus.ACTIVE,
-                1000L
+                1000.0
         );
 
         validResponse = new CardResponseDto(
                 1L,
                 validRequest.getCardNumber(),
-                validRequest.getOwner(),
+                validRequest.getUser(),
                 validRequest.getExpirationDate(),
                 validRequest.getStatus(),
                 validRequest.getBalance()
@@ -67,7 +67,7 @@ class CardControllerTest {
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.cardNumber").value("1234567812345678"))
-                .andExpect(jsonPath("$.owner").value("John Doe"))
+                .andExpect(jsonPath("$.user").value(1L))
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
                 .andExpect(jsonPath("$.balance").value(1000));
     }
@@ -79,7 +79,7 @@ class CardControllerTest {
         mockMvc.perform(get("/api/cards/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cardNumber").value("1234567812345678"))
-                .andExpect(jsonPath("$.owner").value("John Doe"));
+                .andExpect(jsonPath("$.user").value(1L));
     }
 
     @Test
@@ -89,7 +89,7 @@ class CardControllerTest {
         mockMvc.perform(get("/api/cards"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].cardNumber").value("1234567812345678"))
-                .andExpect(jsonPath("$[0].owner").value("John Doe"));
+                .andExpect(jsonPath("$[0].user").value(1L));
     }
 
     @Test
@@ -101,7 +101,7 @@ class CardControllerTest {
         CardResponseDto updatedResponse = new CardResponseDto(
                 validResponse.getId(),
                 validResponse.getCardNumber(),
-                validResponse.getOwner(),
+                validResponse.getUser(),
                 validResponse.getExpirationDate(),
                 CardStatus.BLOCKED,
                 validResponse.getBalance()

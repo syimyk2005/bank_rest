@@ -16,9 +16,9 @@ public class CardResponseDto {
 
     private Long id;
     private String cardNumber;
-    private String owner;
+    private Long user;
     private LocalDate expirationDate;
     private CardStatus status;
-    private Long balance;
+    private Double balance;
 
 }

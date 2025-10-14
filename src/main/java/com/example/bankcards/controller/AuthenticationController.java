@@ -1,7 +1,7 @@
 package com.example.bankcards.controller;
 
 import com.example.bankcards.dto.AuthResponse;
-import com.example.bankcards.dto.TokenResponse;
+import com.example.bankcards.dto.TokenResponseDto;
 import com.example.bankcards.dto.UserRequestDto;
 import com.example.bankcards.security.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +30,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<TokenResponse> refreshToken(HttpServletRequest request) {
+    public ResponseEntity<TokenResponseDto> refreshToken(HttpServletRequest request) {
         return authenticationService.refresh(request);
     }
 

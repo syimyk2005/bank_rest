@@ -4,7 +4,8 @@ import com.example.bankcards.dto.CardBlockingRequest;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.CardForBlocking;
 import com.example.bankcards.entity.enums.CardStatus;
-import com.example.bankcards.exception.CardNotFoundException;
+import com.example.bankcards.exception.cardexception.CardNotFoundException;
+import com.example.bankcards.exception.cardexception.CardNumberAlreadyExistException;
 import com.example.bankcards.mapper.CardMapper;
 import com.example.bankcards.repository.CardForBlockingRepository;
 import com.example.bankcards.repository.CardRepository;
@@ -19,83 +20,115 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class CardBlockingServiceTest {
 
     @Mock
-    private CardRepository cardRepository;
-
-    @Mock
     private CardForBlockingRepository cardForBlockingRepository;
-
+    @Mock
+    private CardRepository cardRepository;
+    @Mock
+    private CardForBlocking cardForBlocking;
     @Mock
     private CardMapper cardMapper;
-
     @InjectMocks
-    private CardBlockingService cardBlockingService;
+    private CardBlockingService service;
+
+
+    private Card card;
+    private CardBlockingRequest request;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-    }
-
-    @Test
-    void requestCardBlocking_activeCard_sendsRequest() {
-        Card card = new Card();
-        card.setId(1L);
+        card = new Card();
+        card.setCardNumber("1111222233334444");
         card.setStatus(CardStatus.ACTIVE);
-
-        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
-        CardForBlocking blocking = new CardForBlocking();
-        when(cardMapper.toBlockingEntity(any(CardBlockingRequest.class))).thenReturn(blocking);
-
-        CardBlockingRequest request = new CardBlockingRequest();
-        request.setCardId(1L);
-
-        String result = cardBlockingService.requestCardBlocking(request);
-        assertEquals("Request for blocking your card was sent", result);
-        verify(cardForBlockingRepository).save(blocking);
+        request = new CardBlockingRequest("1111222233334444", "comment");
     }
 
     @Test
-    void requestCardBlocking_cardAlreadyBlocked_returnsMessage() {
-        Card card = new Card();
-        card.setId(1L);
+    void requestCardBlocking_success() {
+        when(cardForBlockingRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.empty());
+        when(cardRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.of(card));
+
+        String result = service.requestCardBlocking(request);
+
+        assertEquals("Request for blocking your card was sent", result);
+        verify(cardForBlockingRepository).save(any());
+    }
+
+
+    @Test
+    void requestCardBlocking_cardAlreadyRequested_throwsException() {
+        when(cardForBlockingRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.of(cardForBlocking));
+
+        assertThrows(CardNumberAlreadyExistException.class,
+                () -> service.requestCardBlocking(request));
+    }
+
+    @Test
+    void requestCardBlocking_cardNotFound_throwsException() {
+        when(cardForBlockingRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.empty());
+        when(cardRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.empty());
+
+        assertThrows(CardNotFoundException.class,
+                () -> service.requestCardBlocking(request));
+    }
+
+    @Test
+    void requestCardBlocking_alreadyBlocked_returnsMessage() {
         card.setStatus(CardStatus.BLOCKED);
+        when(cardForBlockingRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.empty());
+        when(cardRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.of(card));
 
-        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        String result = service.requestCardBlocking(request);
 
-        CardBlockingRequest request = new CardBlockingRequest();
-        request.setCardId(1L);
-
-        String result = cardBlockingService.requestCardBlocking(request);
         assertEquals("Your card already blocked", result);
         verify(cardForBlockingRepository, never()).save(any());
     }
 
     @Test
-    void approveBlocking_existingCard_blocksCard() {
-        Card card = new Card();
-        card.setId(1L);
-        card.setStatus(CardStatus.ACTIVE);
+    void approveBlocking_success() {
+        when(cardForBlockingRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.of(cardForBlocking));
+        when(cardRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.of(card));
 
-        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
+        String result = service.approveBlocking(card.getCardNumber());
 
-        String result = cardBlockingService.approveBlocking(1L);
-        assertEquals("Card with id: 1 has been blocked", result);
+        assertEquals("Card with id: 1111222233334444 has been blocked", result);
         assertEquals(CardStatus.BLOCKED, card.getStatus());
-
         verify(cardRepository).save(card);
-        verify(cardForBlockingRepository).deleteById(1L);
+        verify(cardForBlockingRepository).deleteByCardNumber(card.getCardNumber());
+    }
+
+    @Test
+    void approveBlocking_notRequested_throwsException() {
+        when(cardForBlockingRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.empty());
+
+        assertThrows(CardNotFoundException.class,
+                () -> service.approveBlocking(card.getCardNumber()));
     }
 
     @Test
     void approveBlocking_cardNotFound_throwsException() {
-        when(cardRepository.findById(1L)).thenReturn(Optional.empty());
+        when(cardForBlockingRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.of(cardForBlocking));
+        when(cardRepository.findByCardNumber(anyString()))
+                .thenReturn(Optional.empty());
 
-        assertThrows(CardNotFoundException.class, () -> cardBlockingService.approveBlocking(1L));
-        verify(cardRepository, never()).save(any());
-        verify(cardForBlockingRepository, never()).deleteById(any());
+        assertThrows(CardNotFoundException.class,
+                () -> service.approveBlocking(card.getCardNumber()));
     }
 }

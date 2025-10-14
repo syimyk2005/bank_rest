@@ -11,6 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChangeCardStatusDto {
-    private CardStatus status;
     private Long cardId;
+    private CardStatus status;
 }

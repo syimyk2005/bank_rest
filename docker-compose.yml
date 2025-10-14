@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:15
@@ -13,9 +11,9 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  bank_app:
+  bank_rest:
     image: openjdk:21-jdk
-    container_name: bank_app
+    container_name: bank_rest
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank_rest
       SPRING_DATASOURCE_USERNAME: postgres
@@ -30,7 +28,8 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./target/bank_rest.jar:/app/bank_rest.jar
+      - ./target/bank_rest-0.0.1-SNAPSHOT.jar:/app/bank_rest.jar
     command: ["java", "-jar", "/app/bank_rest.jar"]
+
 volumes:
   pgdata:

@@ -1,10 +1,10 @@
 databaseChangeLog:
   - changeSet:
-      id: 004-create-card-blocking-table
+      id: 004-create-cards-for-blocking-table
       author: syimyk
       changes:
         - createTable:
-            tableName: card_for_blocking
+            tableName: cards_for_blocking
             columns:
               - column:
                   name: id
@@ -13,16 +13,12 @@ databaseChangeLog:
                     primaryKey: true
                     nullable: false
               - column:
-                  name: card_id
-                  type: BIGINT
+                  name: card_number
+                  type: VARCHAR(16)
                   constraints:
                     nullable: false
               - column:
                   name: comment
                   type: VARCHAR(255)
-        - addForeignKeyConstraint:
-            baseTableName: card_for_blocking
-            baseColumnNames: card_id
-            referencedTableName: cards
-            referencedColumnNames: id
-            constraintName: fk_card_blocking_cards
+                  constraints:
+                    nullable: true

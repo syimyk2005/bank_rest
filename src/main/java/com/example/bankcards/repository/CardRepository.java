@@ -24,4 +24,5 @@ public interface CardRepository extends JpaRepository<Card, Integer> {
     @Query("SELECT c FROM Card c where c.cardNumber = :cardNumber")
     Optional<Card> findByCardNumberForUpdate(String cardNumber);
 
+    Optional<Card> findByCardNumber(String cardNumber);
 }

@@ -34,6 +34,11 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html", "/docs/openapi.yml").permitAll()
                         .requestMatchers("/api/users/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/cards/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/cards/blocking/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/cards/blocking/request").authenticated()
+                        .requestMatchers("/api/transactions/**").authenticated()
+                        .requestMatchers("/api/cards/my/**").authenticated()
 
                         .anyRequest().authenticated()
                 )

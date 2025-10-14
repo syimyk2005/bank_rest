@@ -20,9 +20,9 @@ public class CardBlockingController {
         return ResponseEntity.ok(message);
     }
 
-    @PostMapping("/approve/{id}")
-    public ResponseEntity<String> approveBlocking(@PathVariable Long id) {
-        String message = cardBlockingService.approveBlocking(id);
+    @PostMapping("/approve/{cardNumber}")
+    public ResponseEntity<String> approveBlocking(@PathVariable String cardNumber) {
+        String message = cardBlockingService.approveBlocking(cardNumber);
         return ResponseEntity.ok(message);
     }
 }

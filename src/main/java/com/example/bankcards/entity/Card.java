@@ -8,6 +8,7 @@ import java.time.LocalDate;
 
 @Data
 @Entity
+@Table(name = "cards")
 public class Card {
 
     @Id
@@ -26,5 +27,5 @@ public class Card {
     @Enumerated(EnumType.STRING)
     private CardStatus status;
 
-    private Long balance = 0L;
+    private Double balance;
 }

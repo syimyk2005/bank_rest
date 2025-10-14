@@ -19,7 +19,6 @@ public class TransactionController {
 
     @PostMapping("/transfer")
     public ResponseEntity<String> transfer(@RequestBody @Valid TransferRequestDto dto) {
-        transactionService.transfer(dto);
-        return ResponseEntity.ok("Transfer successful");
+        return ResponseEntity.ok(transactionService.transfer(dto));
     }
 }

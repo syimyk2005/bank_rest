@@ -30,7 +30,7 @@ class TransactionControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
         objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule()); // для LocalDate и других java.time
+        objectMapper.registerModule(new JavaTimeModule());
     }
 
     @Test
@@ -38,9 +38,10 @@ class TransactionControllerTest {
         TransferRequestDto dto = new TransferRequestDto();
         dto.setFromCardNumber("1234567812345678");
         dto.setToCardNumber("8765432187654321");
-        dto.setAmount(100L);
+        dto.setAmount(100.0);
 
-        Mockito.doNothing().when(transactionService).transfer(any());
+        Mockito.when(transactionService.transfer(any()))
+                .thenReturn("Transfer successful");
 
         mockMvc.perform(post("/api/transactions/transfer")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -48,4 +49,5 @@ class TransactionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("Transfer successful"));
     }
+
 }
