@@ -1,6 +1,0 @@
-com\example\bankcards\service\CardServiceTest.class
-com\example\bankcards\controller\CardBlockingControllerTest.class
-com\example\bankcards\controller\CardControllerTest.class
-com\example\bankcards\service\TransactionServiceTest.class
-com\example\bankcards\controller\TransactionControllerTest.class
-com\example\bankcards\service\CardBlockingServiceTest.class
