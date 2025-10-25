@@ -17,7 +17,8 @@ public class CardForBlocking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String cardNumber;
-    private String comment;
 
+    private String cardNumber;
+
+    private String comment;
 }

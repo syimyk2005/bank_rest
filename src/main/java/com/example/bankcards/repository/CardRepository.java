@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -21,8 +22,10 @@ public interface CardRepository extends JpaRepository<Card, Integer> {
     Optional<Card> findById(Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT c FROM Card c where c.cardNumber = :cardNumber")
-    Optional<Card> findByCardNumberForUpdate(String cardNumber);
+    @Query("SELECT c FROM Card c WHERE c.cardNumber IN :cardNumbers")
+    List<Card> findAllByCardNumberInForUpdate(List<String> cardNumbers);
 
     Optional<Card> findByCardNumber(String cardNumber);
+
+    boolean existsByCardNumber(String cardNumber);
 }

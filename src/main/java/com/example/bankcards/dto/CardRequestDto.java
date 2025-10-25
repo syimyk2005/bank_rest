@@ -1,15 +1,13 @@
 package com.example.bankcards.dto;
 
 import com.example.bankcards.entity.enums.CardStatus;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @AllArgsConstructor
@@ -30,8 +28,9 @@ public class CardRequestDto {
     @NotNull(message = "card status is required")
     private CardStatus status;
 
-    @Min(value = 0, message = "balance cannot be negative")
-    private Double balance = 0.0;
+    @DecimalMin(value = "0.0", inclusive = true, message = "Balance cannot be negative")
+    private BigDecimal balance = BigDecimal.ZERO;
+
 
 }
 

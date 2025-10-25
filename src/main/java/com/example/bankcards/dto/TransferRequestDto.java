@@ -1,17 +1,27 @@
 package com.example.bankcards.dto;
 
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import jakarta.validation.constraints.Pattern;
+import lombok.*;
 
-@Data
+import java.math.BigDecimal;
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
 public class TransferRequestDto {
+
     @NotNull
+    @Pattern(regexp = "\\d{16}", message = "Card number must be exactly 16 digits")
     private String fromCardNumber;
 
     @NotNull
+    @Pattern(regexp = "\\d{16}", message = "Card number must be exactly 16 digits")
     private String toCardNumber;
 
-    @Min(value = 1, message = "Amount must be greater than 0")
-    private Double amount;
+    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
+    private BigDecimal amount;
 }
+

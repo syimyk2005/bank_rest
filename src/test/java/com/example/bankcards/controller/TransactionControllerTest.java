@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.math.BigDecimal;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -38,7 +40,7 @@ class TransactionControllerTest {
         TransferRequestDto dto = new TransferRequestDto();
         dto.setFromCardNumber("1234567812345678");
         dto.setToCardNumber("8765432187654321");
-        dto.setAmount(100.0);
+        dto.setAmount(new BigDecimal("100.0"));
 
         Mockito.when(transactionService.transfer(any()))
                 .thenReturn("Transfer successful");

@@ -9,12 +9,25 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Component;
 
+/**
+ * Обработчик выхода из системы.
+ * <p>
+ * При выходе помечает токен как отозванный (revoked),
+ * чтобы его больше нельзя было использовать.
+ */
 @RequiredArgsConstructor
 @Component
 public class CustomLogoutHandler implements LogoutHandler {
 
     private final TokenRepository tokenRepository;
 
+    /**
+     * Помечает токен из заголовка Authorization как отозванный.
+     *
+     * @param request        HTTP-запрос с токеном
+     * @param response       HTTP-ответ
+     * @param authentication информация об аутентификации пользователя
+     */
     @Override
     public void logout(HttpServletRequest request,
                        HttpServletResponse response,
@@ -32,5 +45,4 @@ public class CustomLogoutHandler implements LogoutHandler {
         storedToken.setRevoked(true);
         tokenRepository.save(storedToken);
     }
-
 }

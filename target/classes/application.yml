@@ -1,0 +1,27 @@
+spring:
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/migration/change-log.yaml
+  application:
+    name:
+      bank_rest
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bank_rest
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+application:
+  security:
+    jwt:
+      secret-key: bb881451354ad90b161deb433b52a964ec4cd34db010d24f3e116136ab734e8a
+      access-token-expiration: 900000
+      refresh-token-expiration: 604800000
+server:
+  port: 8080
+springdoc:
+  swagger-ui:
+    url: docs/openapi.yml
+    path: swagger-ui.html

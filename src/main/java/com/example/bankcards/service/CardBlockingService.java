@@ -12,19 +12,32 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+/**
+ * Сервис для управления блокировкой карт.
+ * Позволяет пользователю запросить блокировку карты и администратору одобрять эти запросы.
+ */
 @Service
 @RequiredArgsConstructor
 public class CardBlockingService {
+
     private final CardForBlockingRepository cardForBlockingRepository;
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
 
+    /**
+     * Создаёт запрос на блокировку карты.
+     *
+     * @param cardBlockingRequest DTO с номером карты для блокировки
+     * @return сообщение о результате запроса
+     * @throws CardNumberAlreadyExistException если запрос на блокировку для этой карты уже существует
+     * @throws CardNotFoundException если карта с указанным номером не найдена
+     */
     public String requestCardBlocking(CardBlockingRequest cardBlockingRequest) {
         if (cardForBlockingRepository.findByCardNumber(cardBlockingRequest.getCardNumber()).isPresent()) {
             throw new CardNumberAlreadyExistException("Card was requested for blocking already");
         }
         Card card = cardRepository.findByCardNumber(cardBlockingRequest.getCardNumber())
-                .orElseThrow(() -> new CardNotFoundException("Card with number: " + cardBlockingRequest.getCardNumber() + " not found"));
+                .orElseThrow(() -> new CardNotFoundException("Card with number : " + cardBlockingRequest.getCardNumber() + " not found"));
         if (card.getStatus().equals(CardStatus.BLOCKED)) {
             return "Your card already blocked";
         }
@@ -33,13 +46,20 @@ public class CardBlockingService {
     }
 
 
+    /**
+     * Одобряет блокировку карты и меняет её статус на BLOCKED.
+     *
+     * @param cardNumber номер карты для блокировки
+     * @return сообщение о результате одобрения
+     * @throws CardNotFoundException если карта не найдена или запрос на блокировку отсутствует
+     */
     @Transactional
     public String approveBlocking(String cardNumber) {
         cardForBlockingRepository.findByCardNumber(cardNumber)
                 .orElseThrow(() -> new CardNotFoundException("Card with number: " + cardNumber + " was not requested for blocking"));
 
         Card card = cardRepository.findByCardNumber(cardNumber)
-                .orElseThrow(() -> new CardNotFoundException("Card with id: " + cardNumber + " not found"));
+                .orElseThrow(() -> new CardNotFoundException("Card with number: " + cardNumber + " not found"));
         card.setStatus(CardStatus.BLOCKED);
         cardRepository.save(card);
         cardForBlockingRepository.deleteByCardNumber(cardNumber);

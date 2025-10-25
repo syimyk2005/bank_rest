@@ -2,11 +2,15 @@ package com.example.bankcards.entity;
 
 import com.example.bankcards.entity.enums.CardStatus;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
-@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 @Entity
 @Table(name = "cards")
 public class Card {
@@ -25,7 +29,9 @@ public class Card {
     private LocalDate expirationDate;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private CardStatus status;
 
-    private Double balance;
+    @Column(nullable = false, precision = 15, scale = 2)
+    private BigDecimal balance = BigDecimal.ZERO;
 }

@@ -12,12 +12,26 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-
+/**
+ * Глобальный обработчик исключений для операций с картами.
+ * <p>
+ * Перехватывает специфические исключения, связанные с картами,
+ * и формирует удобный JSON-ответ с информацией о статусе, сообщением
+ * и временной меткой.
+ */
 @Order(1)
 @ControllerAdvice
 public class CardExceptionHandler {
+
     private static final Logger log = LoggerFactory.getLogger(CardExceptionHandler.class);
 
+    /**
+     * Создает стандартный JSON-ответ с информацией об ошибке.
+     *
+     * @param status  HTTP статус ошибки
+     * @param message Сообщение об ошибке
+     * @return Map с деталями ошибки
+     */
     private Map<String, Object> createErrorResponse(HttpStatus status, String message) {
         Map<String, Object> error = new HashMap<>();
         error.put("timestamp", LocalDateTime.now());
@@ -27,6 +41,9 @@ public class CardExceptionHandler {
         return error;
     }
 
+    /**
+     * Обрабатывает ошибку недостаточного баланса.
+     */
     @ExceptionHandler(InsufficientBalanceException.class)
     public ResponseEntity<Map<String, Object>> handleInsufficientBalance(InsufficientBalanceException ex) {
         log.warn("Insufficient balance: {}", ex.getMessage());
@@ -34,6 +51,9 @@ public class CardExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
     }
 
+    /**
+     * Обрабатывает ошибку дублирования номера карты.
+     */
     @ExceptionHandler(CardNumberAlreadyExistException.class)
     public ResponseEntity<Map<String, Object>> handleCardNumberAlreadyExist(CardNumberAlreadyExistException ex) {
         log.warn("Conflict: {}", ex.getMessage());
@@ -41,6 +61,9 @@ public class CardExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
+    /**
+     * Обрабатывает ошибку отсутствия карты.
+     */
     @ExceptionHandler(CardNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleCardNotFoundException(CardNotFoundException ex) {
         log.warn("Card not found: {}", ex.getMessage());
@@ -48,11 +71,13 @@ public class CardExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    /**
+     * Обрабатывает ошибку доступа к чужой карте.
+     */
     @ExceptionHandler(AccessDeniedForOtherCardException.class)
-    public ResponseEntity<Map<String, Object>> handleCardNotFoundException(AccessDeniedForOtherCardException ex) {
-        log.warn("Card not found: {}", ex.getMessage());
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedForOtherCardException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
         Map<String, Object> response = createErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
-
 }

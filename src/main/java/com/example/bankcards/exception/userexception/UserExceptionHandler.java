@@ -17,12 +17,25 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Глобальный обработчик исключений для операций с пользователями.
+ * <p>
+ * Перехватывает ошибки валидации, аутентификации, дублирования данных и другие
+ * исключения, формируя стандартизированный JSON-ответ с информацией об ошибке.
+ */
 @Order(2)
 @ControllerAdvice
 public class UserExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(UserExceptionHandler.class);
 
+    /**
+     * Создает стандартный JSON-ответ с деталями ошибки.
+     *
+     * @param status  HTTP статус ошибки
+     * @param message Сообщение об ошибке
+     * @return Map с деталями ошибки
+     */
     private Map<String, Object> createErrorResponse(HttpStatus status, String message) {
         Map<String, Object> error = new HashMap<>();
         error.put("timestamp", LocalDateTime.now());
@@ -32,6 +45,9 @@ public class UserExceptionHandler {
         return error;
     }
 
+    /**
+     * Обрабатывает ошибки валидации полей запроса.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationException(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new HashMap<>();
@@ -44,6 +60,9 @@ public class UserExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    /**
+     * Обрабатывает ошибки дублирования username или email.
+     */
     @ExceptionHandler({UsernameAlreadyExistsException.class, EmailAlreadyExistsException.class})
     public ResponseEntity<Map<String, Object>> handleAlreadyExistsExceptions(RuntimeException ex) {
         log.warn("Conflict: {}", ex.getMessage());
@@ -51,6 +70,9 @@ public class UserExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
+    /**
+     * Обрабатывает ошибки доступа к ресурсу.
+     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
         log.warn("Access denied: {}", ex.getMessage());
@@ -58,13 +80,20 @@ public class UserExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
+    /**
+     * Обрабатывает ошибки аутентификации и некорректные учетные данные.
+     */
     @ExceptionHandler({AuthenticationException.class, BadCredentialsException.class, JwtException.class})
     public ResponseEntity<Map<String, Object>> handleUnauthorized(Exception ex) {
         log.warn("Unauthorized access: {}", ex.getMessage());
-        Map<String, Object> response = createErrorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized: User does not exist or the entered data is incorrect ");
+        Map<String, Object> response = createErrorResponse(HttpStatus.UNAUTHORIZED,
+                "Unauthorized: User does not exist or the entered data is incorrect");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
+    /**
+     * Обрабатывает общие непредвиденные ошибки.
+     */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneralException(Exception ex) {
         log.error("Unexpected error: {}", ex.getMessage(), ex);
@@ -72,12 +101,13 @@ public class UserExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
+    /**
+     * Обрабатывает ошибку, если пользователь не найден.
+     */
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFoundException ex) {
         log.warn("User not found: {}", ex.getMessage());
         Map<String, Object> response = createErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
-
-
 }

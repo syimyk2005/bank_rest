@@ -3,188 +3,150 @@ package com.example.bankcards.service;
 import com.example.bankcards.dto.TransferRequestDto;
 import com.example.bankcards.entity.Card;
 import com.example.bankcards.entity.User;
+import com.example.bankcards.exception.cardexception.AccessDeniedForOtherCardException;
 import com.example.bankcards.exception.cardexception.CardNotFoundException;
 import com.example.bankcards.exception.cardexception.InsufficientBalanceException;
 import com.example.bankcards.repository.CardRepository;
-import com.example.bankcards.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class TransactionServiceTest {
 
-    @Mock
     private CardRepository cardRepository;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @InjectMocks
     private TransactionService transactionService;
 
+    private User currentUser;
     private Card fromCard;
     private Card toCard;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        cardRepository = mock(CardRepository.class);
+        transactionService = new TransactionService(cardRepository);
+
+        currentUser = new User();
+        currentUser.setUsername("testuser");
 
         fromCard = new Card();
-        fromCard.setId(1L);
         fromCard.setCardNumber("1111222233334444");
-        fromCard.setBalance(1000.0);
+        fromCard.setUser(currentUser);
+        fromCard.setBalance(BigDecimal.valueOf(1000.00));
 
         toCard = new Card();
-        toCard.setId(2L);
         toCard.setCardNumber("5555666677778888");
-        toCard.setBalance(500.0);
+        toCard.setUser(currentUser);
+        toCard.setBalance(BigDecimal.valueOf(500.00));
     }
 
-
-    @Test
-    void transfer_successful() {
+    private void mockSecurityContext(User user) {
         Authentication authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn("testuser");
+        when(authentication.getPrincipal()).thenReturn(user);
 
         SecurityContext securityContext = mock(SecurityContext.class);
         when(securityContext.getAuthentication()).thenReturn(authentication);
 
-        try (MockedStatic<SecurityContextHolder> mockedStatic = Mockito.mockStatic(SecurityContextHolder.class)) {
-            mockedStatic.when(SecurityContextHolder::getContext).thenReturn(securityContext);
-            User currentUser = new User();
-            currentUser.setUsername("testuser");
-            fromCard.setUser(currentUser);
-            toCard.setUser(currentUser);
-
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(currentUser));
-            when(cardRepository.findByCardNumberForUpdate("1111222233334444")).thenReturn(Optional.of(fromCard));
-            when(cardRepository.findByCardNumberForUpdate("5555666677778888")).thenReturn(Optional.of(toCard));
-
-            TransferRequestDto dto = new TransferRequestDto();
-            dto.setFromCardNumber("1111222233334444");
-            dto.setToCardNumber("5555666677778888");
-            dto.setAmount(200.0);
-
-            String result = transactionService.transfer(dto);
-
-            assertTrue(result.contains("fromCard = 800.0"));
-            assertTrue(result.contains("toCard = 700.0"));
-
-            assertEquals(800.0, fromCard.getBalance(), 0.001);
-            assertEquals(700.0, toCard.getBalance(), 0.001);
-
-            verify(cardRepository).save(fromCard);
-            verify(cardRepository).save(toCard);
-        }
+        SecurityContextHolder.setContext(securityContext);
     }
 
+    @Test
+    void transfer_successful() {
+        mockSecurityContext(currentUser);
+        when(cardRepository.findAllByCardNumberInForUpdate(anyList()))
+                .thenReturn(List.of(fromCard, toCard));
+
+        TransferRequestDto dto = new TransferRequestDto();
+        dto.setFromCardNumber("1111222233334444");
+        dto.setToCardNumber("5555666677778888");
+        dto.setAmount(BigDecimal.valueOf(200.00));
+
+        String result = transactionService.transfer(dto);
+
+        assertEquals(0, fromCard.getBalance().compareTo(BigDecimal.valueOf(800.00)));
+        assertEquals(0, toCard.getBalance().compareTo(BigDecimal.valueOf(700.00)));
+        assertTrue(result.contains("fromCard = 800.0"));
+        assertTrue(result.contains("toCard = 700.0"));
+    }
 
     @Test
     void transfer_sameCard_throwsException() {
+        mockSecurityContext(currentUser);
+
         TransferRequestDto dto = new TransferRequestDto();
         dto.setFromCardNumber("1111222233334444");
         dto.setToCardNumber("1111222233334444");
-        dto.setAmount(100.0);
+        dto.setAmount(BigDecimal.valueOf(100.00));
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> transactionService.transfer(dto));
-        assertEquals("Cannot transfer to the same card", exception.getMessage());
+
+        assertEquals("Cannot transfer to the same card", ex.getMessage());
     }
 
     @Test
     void transfer_insufficientBalance_throwsException() {
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn("testuser");
+        mockSecurityContext(currentUser);
+        fromCard.setBalance(BigDecimal.valueOf(100.00));
 
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(cardRepository.findAllByCardNumberInForUpdate(anyList()))
+                .thenReturn(List.of(fromCard, toCard));
 
-        try (MockedStatic<SecurityContextHolder> mockedStatic = Mockito.mockStatic(SecurityContextHolder.class)) {
-            mockedStatic.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+        TransferRequestDto dto = new TransferRequestDto();
+        dto.setFromCardNumber("1111222233334444");
+        dto.setToCardNumber("5555666677778888");
+        dto.setAmount(BigDecimal.valueOf(200.00));
 
-            User currentUser = new User();
-            currentUser.setUsername("testuser");
-            fromCard.setUser(currentUser);
-            toCard.setUser(currentUser);
+        InsufficientBalanceException ex = assertThrows(InsufficientBalanceException.class,
+                () -> transactionService.transfer(dto));
 
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(currentUser));
-            when(cardRepository.findByCardNumberForUpdate("1111222233334444")).thenReturn(Optional.of(fromCard));
-            when(cardRepository.findByCardNumberForUpdate("5555666677778888")).thenReturn(Optional.of(toCard));
-
-            TransferRequestDto dto = new TransferRequestDto();
-            dto.setFromCardNumber("1111222233334444");
-            dto.setToCardNumber("5555666677778888");
-            dto.setAmount(2000.0);
-
-            InsufficientBalanceException exception = assertThrows(InsufficientBalanceException.class,
-                    () -> transactionService.transfer(dto));
-            assertEquals("Insufficient balance", exception.getMessage());
-        }
-    }
-
-
-    @Test
-    void transfer_fromCardNotFound_throwsException() {
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn("testuser");
-
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-
-        try (MockedStatic<SecurityContextHolder> mockedStatic = Mockito.mockStatic(SecurityContextHolder.class)) {
-            mockedStatic.when(SecurityContextHolder::getContext).thenReturn(securityContext);
-
-            User currentUser = new User();
-            currentUser.setUsername("testuser");
-            toCard.setUser(currentUser);
-
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(currentUser));
-            when(cardRepository.findByCardNumberForUpdate("0000111122223333")).thenReturn(Optional.empty());
-            when(cardRepository.findByCardNumberForUpdate("5555666677778888")).thenReturn(Optional.of(toCard));
-
-            TransferRequestDto dto = new TransferRequestDto();
-            dto.setFromCardNumber("0000111122223333");
-            dto.setToCardNumber("5555666677778888");
-            dto.setAmount(100.0);
-
-            assertThrows(CardNotFoundException.class, () -> transactionService.transfer(dto));
-        }
+        assertEquals("Insufficient balance", ex.getMessage());
     }
 
     @Test
-    void transfer_toCardNotFound_throwsException() {
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn("testuser");
+    void transfer_cardNotFound_throwsException() {
+        mockSecurityContext(currentUser);
 
-        SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(cardRepository.findAllByCardNumberInForUpdate(anyList()))
+                .thenReturn(List.of(toCard)); // fromCard не найден
 
-        try (MockedStatic<SecurityContextHolder> mockedStatic = Mockito.mockStatic(SecurityContextHolder.class)) {
-            mockedStatic.when(SecurityContextHolder::getContext).thenReturn(securityContext);
+        TransferRequestDto dto = new TransferRequestDto();
+        dto.setFromCardNumber("1111222233334444");
+        dto.setToCardNumber("5555666677778888");
+        dto.setAmount(BigDecimal.valueOf(100.00));
 
-            User currentUser = new User();
-            currentUser.setUsername("testuser");
-            fromCard.setUser(currentUser);
+        CardNotFoundException ex = assertThrows(CardNotFoundException.class,
+                () -> transactionService.transfer(dto));
 
-            when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(currentUser));
-            when(cardRepository.findByCardNumberForUpdate("1111222233334444")).thenReturn(Optional.of(fromCard));
-            when(cardRepository.findByCardNumberForUpdate("9999000011112222")).thenReturn(Optional.empty());
-
-            TransferRequestDto dto = new TransferRequestDto();
-            dto.setFromCardNumber("1111222233334444");
-            dto.setToCardNumber("9999000011112222");
-            dto.setAmount(100.0);
-
-            assertThrows(CardNotFoundException.class, () -> transactionService.transfer(dto));
-        }
+        assertEquals("Source card not found", ex.getMessage());
     }
 
+    @Test
+    void transfer_accessDeniedForOtherCard_throwsException() {
+        User anotherUser = new User();
+        anotherUser.setUsername("intruder");
+
+        mockSecurityContext(currentUser);
+        fromCard.setUser(anotherUser);
+
+        when(cardRepository.findAllByCardNumberInForUpdate(anyList()))
+                .thenReturn(List.of(fromCard, toCard));
+
+        TransferRequestDto dto = new TransferRequestDto();
+        dto.setFromCardNumber("1111222233334444");
+        dto.setToCardNumber("5555666677778888");
+        dto.setAmount(BigDecimal.valueOf(100.00));
+
+        AccessDeniedForOtherCardException ex = assertThrows(AccessDeniedForOtherCardException.class,
+                () -> transactionService.transfer(dto));
+
+        assertEquals("You can transfer only between your own cards", ex.getMessage());
+    }
 }

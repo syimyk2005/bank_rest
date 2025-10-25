@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -45,7 +46,7 @@ class CardControllerTest {
                 1L,
                 LocalDate.now().plusYears(2),
                 CardStatus.ACTIVE,
-                1000.0
+                new BigDecimal("1000.0")
         );
 
         validResponse = new CardResponseDto(
