@@ -130,11 +130,18 @@ class TransactionServiceTest {
 
     @Test
     void transfer_accessDeniedForOtherCard_throwsException() {
+        User currentUser = new User();
+        currentUser.setId(1L);
+        currentUser.setUsername("owner");
+
         User anotherUser = new User();
+        anotherUser.setId(2L);
         anotherUser.setUsername("intruder");
 
         mockSecurityContext(currentUser);
+
         fromCard.setUser(anotherUser);
+        toCard.setUser(currentUser);
 
         when(cardRepository.findAllByCardNumberInForUpdate(anyList()))
                 .thenReturn(List.of(fromCard, toCard));
@@ -144,9 +151,12 @@ class TransactionServiceTest {
         dto.setToCardNumber("5555666677778888");
         dto.setAmount(BigDecimal.valueOf(100.00));
 
-        AccessDeniedForOtherCardException ex = assertThrows(AccessDeniedForOtherCardException.class,
-                () -> transactionService.transfer(dto));
+        AccessDeniedForOtherCardException ex = assertThrows(
+                AccessDeniedForOtherCardException.class,
+                () -> transactionService.transfer(dto)
+        );
 
         assertEquals("You can transfer only between your own cards", ex.getMessage());
     }
+
 }

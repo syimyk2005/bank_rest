@@ -8,7 +8,6 @@ import com.example.bankcards.exception.userexception.UsernameAlreadyExistsExcept
 import com.example.bankcards.mapper.UserMapper;
 import com.example.bankcards.repository.TokenRepository;
 import com.example.bankcards.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
