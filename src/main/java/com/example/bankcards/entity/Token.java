@@ -26,7 +26,6 @@ public class Token {
     @Column(name = "is_logged_out")
     private boolean isRevoked;
 
-
     @Column(name = "expiry_date")
     @NotNull(message = "expire date is empty")
     private Date expireDate;

@@ -22,19 +22,18 @@ public class Card {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 16)
+    @Column(unique = true, length = 16)
     private String cardNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private User user;
 
     private LocalDate expirationDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private CardStatus status;
 
-    @Column(nullable = false, precision = 15, scale = 2)
+    @Column(precision = 15, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
 }
