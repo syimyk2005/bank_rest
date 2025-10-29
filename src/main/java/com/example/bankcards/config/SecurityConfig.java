@@ -1,5 +1,6 @@
 package com.example.bankcards.config;
 
+import com.example.bankcards.entity.enums.Role;
 import com.example.bankcards.security.JwtAuthenticationFilter;
 import com.example.bankcards.security.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,9 +40,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/swagger-ui/index.html", "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html", "/docs/openapi.yml").permitAll()
-                        .requestMatchers("/api/users/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/cards/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/cards/blocking/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/users/**").hasAuthority(Role.ADMIN.name())
+                        .requestMatchers("/api/cards/**").hasAuthority(Role.ADMIN.name())
+                        .requestMatchers("/api/cards/blocking/**").hasAuthority(Role.ADMIN.name())
                         .requestMatchers("/api/cards/blocking/request").authenticated()
                         .requestMatchers("/api/transactions/**").authenticated()
                         .requestMatchers("/api/cards/my/**").authenticated()

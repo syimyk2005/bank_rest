@@ -130,7 +130,6 @@ class TransactionServiceTest {
 
     @Test
     void transfer_accessDeniedForOtherCard_throwsException() {
-        User currentUser = new User();
         currentUser.setId(1L);
         currentUser.setUsername("owner");
 

@@ -6,7 +6,6 @@ import com.example.bankcards.entity.User;
 import com.example.bankcards.exception.userexception.EmailAlreadyExistsException;
 import com.example.bankcards.exception.userexception.UsernameAlreadyExistsException;
 import com.example.bankcards.mapper.UserMapper;
-import com.example.bankcards.repository.TokenRepository;
 import com.example.bankcards.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,7 +23,6 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final TokenRepository tokenRepository;
 
     /**
      * Находит пользователя по ID.
@@ -44,7 +42,7 @@ public class UserService {
      *
      * @return список объектов UserResponseDto
      */
-    public List<UserResponseDto> getAllUsers() {
+    public List<UserResponseDto> findAllUsers() {
         return userRepository.findAll()
                 .stream()
                 .map(userMapper::toDto)

@@ -15,20 +15,20 @@ import java.util.function.Function;
 
 /**
  * Утилитный сервис для работы с JWT (JSON Web Token).
- * Позволяет генерировать, валидировать и извлекать данные из токенов.
+ * Позволяет генерировать, проверять и извлекать данные из токенов.
  */
 @Service
 public class JwtUtil {
 
     private final TokenRepository tokenRepository;
 
-    @Value("${application.security.jwt.secret-key}")
+    @Value("${security.jwt.secret-key}")
     private String secretKey;
 
-    @Value("${application.security.jwt.access-token-expiration}")
+    @Value("${security.jwt.access-token-expiration}")
     private long accessTokenExpire;
 
-    @Value("${application.security.jwt.refresh-token-expiration}")
+    @Value("${security.jwt.refresh-token-expiration}")
     private long refreshTokenExpire;
 
     public JwtUtil(TokenRepository tokenRepository) {

@@ -98,6 +98,6 @@ public class CardController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(cardService.getCardsForCurrentUser(search, page, size));
+        return ResponseEntity.ok(cardService.findCardsForCurrentUser(search, page, size));
     }
 }

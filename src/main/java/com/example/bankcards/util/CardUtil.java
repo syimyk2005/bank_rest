@@ -6,6 +6,10 @@ package com.example.bankcards.util;
  */
 public class CardUtil {
 
+    private CardUtil() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
     /**
      * Маскирует номер карты, оставляя видимыми только последние 4 цифры.
      *

@@ -1,7 +1,6 @@
 package com.example.bankcards.mapper;
 
 import com.example.bankcards.dto.CardBlockingRequest;
-import com.example.bankcards.dto.CardBlockingResponse;
 import com.example.bankcards.dto.CardRequestDto;
 import com.example.bankcards.dto.CardResponseDto;
 import com.example.bankcards.entity.Card;
@@ -20,9 +19,6 @@ public interface CardMapper {
     Card toEntity(CardRequestDto cardRequestDto);
 
     CardForBlocking toBlockingEntity(CardBlockingRequest cardBlockingRequest);
-
-    CardBlockingResponse toBlockingResponse(Card card);
-
 
     default User map(Long userId) {
         if (userId == null) return null;

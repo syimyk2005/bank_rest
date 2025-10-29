@@ -11,6 +11,7 @@ import com.example.bankcards.mapper.CardMapper;
 import com.example.bankcards.repository.CardRepository;
 import com.example.bankcards.repository.UserRepository;
 import com.example.bankcards.util.CardUtil;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -53,19 +54,25 @@ class CardServiceTest {
 
     @Mock
     private Authentication authentication;
+    private AutoCloseable closeable;
 
     @BeforeEach
     void setup() {
-        MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
         SecurityContextHolder.setContext(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getName()).thenReturn("testuser");
     }
 
+    @AfterEach
+    void tearDown() throws Exception {
+        closeable.close();
+    }
+
     @Test
     void createCard_returnsDto() {
         CardRequestDto request = new CardRequestDto();
-        request.setUser(1L); // обязательно
+        request.setUser(1L);
 
         User user = new User();
         user.setId(1L);
@@ -73,7 +80,7 @@ class CardServiceTest {
         Card card = new Card();
         CardResponseDto dto = new CardResponseDto();
 
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user)); // замокаем пользователя
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(cardMapper.toEntity(request)).thenReturn(card);
         when(cardRepository.save(card)).thenReturn(card);
         when(cardMapper.toDto(card)).thenReturn(dto);
@@ -156,7 +163,7 @@ class CardServiceTest {
     }
 
     @Test
-    void getCardsForCurrentUser_masksCardNumbers() {
+    void findCardsForCurrentUser_masksCardNumbers() {
         User user = new User();
         user.setId(1L);
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
@@ -171,15 +178,15 @@ class CardServiceTest {
         dto.setCardNumber(card.getCardNumber());
         when(cardMapper.toDto(any(Card.class))).thenReturn(dto);
 
-        Page<CardResponseDto> result = cardService.getCardsForCurrentUser("", 0, 10);
+        Page<CardResponseDto> result = cardService.findCardsForCurrentUser("", 0, 10);
 
         assertThat(result).hasSize(1);
-        assertThat(result.getContent().get(0).getCardNumber())
+        assertThat(result.getContent().getFirst().getCardNumber())
                 .isEqualTo(CardUtil.maskPan("1234567812345678"));
     }
 
     @Test
-    void getCardsForCurrentUser_withSearch() {
+    void findCardsForCurrentUser_withSearch() {
         User user = new User();
         user.setId(1L);
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
@@ -195,18 +202,18 @@ class CardServiceTest {
         dto.setCardNumber(card.getCardNumber());
         when(cardMapper.toDto(any(Card.class))).thenReturn(dto);
 
-        Page<CardResponseDto> result = cardService.getCardsForCurrentUser("1234", 0, 10);
+        Page<CardResponseDto> result = cardService.findCardsForCurrentUser("1234", 0, 10);
 
         assertThat(result).hasSize(1);
-        assertThat(result.getContent().get(0).getCardNumber())
+        assertThat(result.getContent().getFirst().getCardNumber())
                 .isEqualTo(CardUtil.maskPan("1234567812345678"));
     }
 
     @Test
-    void getCardsForCurrentUser_userNotFound_throwsException() {
+    void findCardsForCurrentUser_userNotFound_throwsException() {
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
 
         assertThrows(UsernameNotFoundException.class,
-                () -> cardService.getCardsForCurrentUser("", 0, 10));
+                () -> cardService.findCardsForCurrentUser("", 0, 10));
     }
 }

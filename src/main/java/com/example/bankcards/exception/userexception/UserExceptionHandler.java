@@ -13,9 +13,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.example.bankcards.util.ErrorResponseUtil.createErrorResponse;
 
 /**
  * Глобальный обработчик исключений для операций с пользователями.
@@ -28,22 +29,6 @@ import java.util.Map;
 public class UserExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(UserExceptionHandler.class);
-
-    /**
-     * Создает стандартный JSON-ответ с деталями ошибки.
-     *
-     * @param status  HTTP статус ошибки
-     * @param message Сообщение об ошибке
-     * @return Map с деталями ошибки
-     */
-    private Map<String, Object> createErrorResponse(HttpStatus status, String message) {
-        Map<String, Object> error = new HashMap<>();
-        error.put("timestamp", LocalDateTime.now());
-        error.put("status", status.value());
-        error.put("error", status.getReasonPhrase());
-        error.put("message", message);
-        return error;
-    }
 
     /**
      * Обрабатывает ошибки валидации полей запроса.

@@ -9,6 +9,7 @@ import com.example.bankcards.exception.cardexception.CardNumberAlreadyExistExcep
 import com.example.bankcards.mapper.CardMapper;
 import com.example.bankcards.repository.CardForBlockingRepository;
 import com.example.bankcards.repository.CardRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -31,22 +32,29 @@ class CardBlockingServiceTest {
     private CardRepository cardRepository;
     @Mock
     private CardForBlocking cardForBlocking;
+
     @Mock
     private CardMapper cardMapper;
+
     @InjectMocks
     private CardBlockingService service;
 
-
+    private AutoCloseable closeable;
     private Card card;
     private CardBlockingRequest request;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
         card = new Card();
         card.setCardNumber("1111222233334444");
         card.setStatus(CardStatus.ACTIVE);
         request = new CardBlockingRequest("1111222233334444", "comment");
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        closeable.close();
     }
 
     @Test
@@ -117,8 +125,9 @@ class CardBlockingServiceTest {
         when(cardForBlockingRepository.findByCardNumber(anyString()))
                 .thenReturn(Optional.empty());
 
+        String cardNumber = card.getCardNumber();
         assertThrows(CardNotFoundException.class,
-                () -> service.approveBlocking(card.getCardNumber()));
+                () -> service.approveBlocking(cardNumber));
     }
 
     @Test
@@ -128,7 +137,9 @@ class CardBlockingServiceTest {
         when(cardRepository.findByCardNumber(anyString()))
                 .thenReturn(Optional.empty());
 
+        String cardNumber = card.getCardNumber();
         assertThrows(CardNotFoundException.class,
-                () -> service.approveBlocking(card.getCardNumber()));
+                () -> service.approveBlocking(cardNumber));
     }
+
 }

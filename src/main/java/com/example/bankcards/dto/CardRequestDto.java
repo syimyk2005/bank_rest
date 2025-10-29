@@ -31,7 +31,7 @@ public class CardRequestDto {
     @NotNull(message = "card status is required")
     private CardStatus status;
 
-    @DecimalMin(value = "0.0", inclusive = true, message = "Balance cannot be negative")
+    @DecimalMin(value = "0.0", message = "Balance cannot be negative")
     private BigDecimal balance = BigDecimal.ZERO;
 
 

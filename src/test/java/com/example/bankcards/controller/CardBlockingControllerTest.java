@@ -18,12 +18,11 @@ class CardBlockingControllerTest {
 
     private MockMvc mockMvc;
     private CardBlockingService cardBlockingService;
-    private CardBlockingController controller;
 
     @BeforeEach
     void setup() {
         cardBlockingService = Mockito.mock(CardBlockingService.class);
-        controller = new CardBlockingController(cardBlockingService);
+        CardBlockingController controller = new CardBlockingController(cardBlockingService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
