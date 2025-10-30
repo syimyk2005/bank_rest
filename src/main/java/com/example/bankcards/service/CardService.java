@@ -68,11 +68,10 @@ public class CardService {
     }
 
     public String deleteCard(Long id) {
-        Card card = cardRepository.findById(id)
-                .orElseThrow(() -> new CardNotFoundException(
-                        CARD_WITH_ID + id + " not found or was deleted before"
-                ));
-        cardRepository.delete(card);
+        if (!cardRepository.existsById(id)) {
+            throw new CardNotFoundException(CARD_WITH_ID + id + " not found or was deleted before");
+        }
+        cardRepository.deleteById(id);
         return CARD_WITH_ID + id + " has been deleted";
     }
 

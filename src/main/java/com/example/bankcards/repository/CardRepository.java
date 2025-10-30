@@ -1,3 +1,4 @@
+
 package com.example.bankcards.repository;
 
 import com.example.bankcards.entity.Card;
@@ -13,13 +14,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CardRepository extends JpaRepository<Card, Integer> {
+public interface CardRepository extends JpaRepository<Card, Long> {
 
     Page<Card> findByUserIdAndCardNumberContaining(Long userId, String cardNumber, Pageable pageable);
 
     Page<Card> findByUserId(Long userId, Pageable pageable);
-
-    Optional<Card> findById(Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM Card c WHERE c.cardNumber IN :cardNumbers")

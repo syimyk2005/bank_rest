@@ -115,7 +115,7 @@ class TransactionServiceTest {
         mockSecurityContext(currentUser);
 
         when(cardRepository.findAllByCardNumberInForUpdate(anyList()))
-                .thenReturn(List.of(toCard)); // fromCard не найден
+                .thenReturn(List.of(toCard));
 
         TransferRequestDto dto = new TransferRequestDto();
         dto.setFromCardNumber("1111222233334444");

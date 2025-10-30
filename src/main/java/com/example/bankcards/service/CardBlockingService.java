@@ -20,9 +20,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CardBlockingService {
 
+    private final CardMapper cardMapper;
     private final CardForBlockingRepository cardForBlockingRepository;
     private final CardRepository cardRepository;
-    private final CardMapper cardMapper;
 
     /**
      * Создаёт запрос на блокировку карты.

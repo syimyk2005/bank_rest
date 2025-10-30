@@ -32,7 +32,6 @@ class CardBlockingServiceTest {
     private CardRepository cardRepository;
     @Mock
     private CardForBlocking cardForBlocking;
-
     @Mock
     private CardMapper cardMapper;
 
