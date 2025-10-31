@@ -85,7 +85,7 @@ class CardControllerTest {
 
     @Test
     void getAllCards_shouldReturnOk() throws Exception {
-        when(cardService.getAllCards()).thenReturn(List.of(validResponse));
+        when(cardService.findAllCards()).thenReturn(List.of(validResponse));
 
         mockMvc.perform(get("/api/cards"))
                 .andExpect(status().isOk())

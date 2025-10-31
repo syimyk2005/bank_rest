@@ -80,7 +80,7 @@ public class CardController {
      */
     @GetMapping
     public ResponseEntity<List<CardResponseDto>> getAllCards() {
-        List<CardResponseDto> cards = cardService.getAllCards();
+        List<CardResponseDto> cards = cardService.findAllCards();
         return ResponseEntity.ok(cards);
     }
 

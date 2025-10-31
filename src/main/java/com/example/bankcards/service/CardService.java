@@ -38,8 +38,9 @@ public class CardService {
     private final UserRepository userRepository;
 
     public CardResponseDto createCard(CardRequestDto cardRequestDto) {
-        userRepository.findById(cardRequestDto.getUser())
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + cardRequestDto.getUser()));
+        if (userRepository.existsById(cardRequestDto.getUser())){
+            throw new UserNotFoundException("User not found");
+        }
 
         if (cardRepository.existsByCardNumber(cardRequestDto.getCardNumber())) {
             throw new CardNumberAlreadyExistException("Card number already exists");
@@ -75,7 +76,7 @@ public class CardService {
         return CARD_WITH_ID + id + " has been deleted";
     }
 
-    public List<CardResponseDto> getAllCards() {
+    public List<CardResponseDto> findAllCards() {
         return cardRepository.findAll()
                 .stream()
                 .map(cardMapper::toDto)

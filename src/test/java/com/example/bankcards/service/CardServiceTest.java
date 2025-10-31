@@ -157,7 +157,7 @@ class CardServiceTest {
         when(cardRepository.findAll()).thenReturn(List.of(card));
         when(cardMapper.toDto(card)).thenReturn(dto);
 
-        List<CardResponseDto> result = cardService.getAllCards();
+        List<CardResponseDto> result = cardService.findAllCards();
 
         assertThat(result).hasSize(1);
     }
