@@ -1,0 +1,436 @@
+openapi: 3.0.3
+info:
+  title: API Банковских Карт
+  version: 1.0.0
+  description: Документация API для работы с пользователями, картами, транзакциями и блокировкой карт
+
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserRequestDtoRegister:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          enum: [ USER, ADMIN ]
+
+    UserRequestDtoLogin:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    UserResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          enum: [ USER, ADMIN ]
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: JWT токен для авторизации
+        refreshToken:
+          type: string
+          description: JWT токен для обновления access токена
+
+    CardRequestDto:
+      type: object
+      properties:
+        cardNumber:
+          type: string
+        owner:
+          type: integer
+        expirationDate:
+          type: string
+        status:
+          enum: [ ACTIVE, BLOCKED ]
+        balance:
+          type: string
+
+    CardResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+        cardNumber:
+          type: string
+        owner:
+          type: integer
+        expirationDate:
+          type: string
+        status:
+          enum: [ ACTIVE, BLOCKED ]
+        balance:
+          type: number
+          format: double
+
+    ChangeCardStatusDto:
+      type: object
+      properties:
+        cardId:
+          type: integer
+        status:
+          enum: [ ACTIVE, BLOCKED ]
+
+    TransferRequestDto:
+      type: object
+      properties:
+        fromCardNumber:
+          type: integer
+        toCardNumber:
+          type: integer
+        amount:
+          type: number
+          format: double
+
+    CardBlockingRequest:
+      type: object
+      properties:
+        cardNumber:
+          type: string
+        comment:
+          type: string
+
+paths:
+
+  # ================== AuthenticationController ==================
+  /api/auth/register:
+    post:
+      summary: Регистрация пользователя
+      description: Создаёт нового пользователя. Возвращает access и refresh токены.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequestDtoRegister'
+      responses:
+        '200':
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /api/auth/login:
+    post:
+      summary: Вход пользователя
+      description: Аутентификация пользователя. Возвращает access и refresh токены.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequestDtoLogin'
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /api/auth/refresh-token:
+    post:
+      summary: Обновление токена
+      description: Обновляет access токен с помощью refresh токена. Возвращает новые токены.
+      responses:
+        '200':
+          description: Токен обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  # ================== UserController ==================
+  /api/users:
+    get:
+      summary: Получить всех пользователей
+      description: Возвращает список всех пользователей. Требуется Bearer токен в заголовке Authorization.
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Список пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponseDto'
+
+  /api/users/{id}:
+    get:
+      summary: Получить пользователя
+      description: Получает пользователя по id. Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Пользователь найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+    put:
+      summary: Обновить пользователя
+      description: Обновляет данные пользователя. Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequestDtoRegister'
+      responses:
+        '200':
+          description: Пользователь обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+    delete:
+      summary: Удалить пользователя
+      description: Удаляет пользователя по id. Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Пользователь удалён
+
+  # ================== CardController ==================
+  /api/cards:
+    get:
+      summary: Получить все карты
+      description: Возвращает список всех карт. Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Список карт
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CardResponseDto'
+    post:
+      summary: Создать карту
+      description: Создаёт новую карту. Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardRequestDto'
+      responses:
+        '201':
+          description: Карта создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponseDto'
+
+  /api/cards/{id}:
+    get:
+      summary: Получить карту по id
+      description: Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Карта найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponseDto'
+    delete:
+      summary: Удалить карту
+      description: Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Карта удалена
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /api/cards/status:
+    patch:
+      summary: Изменить статус карты
+      description: Изменяет статус карты (например, блокировка). Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeCardStatusDto'
+      responses:
+        '200':
+          description: Статус карты обновлён
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponseDto'
+
+  /api/cards/my:
+    get:
+      summary: Получить свои карты
+      description: Возвращает карты текущего пользователя с пагинацией. Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Страница карт пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CardResponseDto'
+                  totalPages:
+                    type: integer
+                  totalElements:
+                    type: integer
+
+  # ================== TransactionController ==================
+  /api/transactions/transfer:
+    post:
+      summary: Перевод между счетами
+      description: Выполняет перевод между картами. Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequestDto'
+      responses:
+        '200':
+          description: Перевод выполнен успешно
+          content:
+            application/json:
+              schema:
+                type: string
+
+  # ================== CardBlockingController ==================
+  /api/card-blocking/request:
+    post:
+      summary: Запрос на блокировку карты
+      description: Отправка запроса на блокировку карты. Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardBlockingRequest'
+      responses:
+        '200':
+          description: Запрос отправлен
+          content:
+            application/json:
+              schema:
+                type: string
+
+  /api/card-blocking/approve/{cardNumber}:
+    post:
+      summary: Подтвердить блокировку карты
+      description: Блокирует карту после одобрения. Требуется токен.
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Карта заблокирована
+          content:
+            application/json:
+              schema:
+                type: string

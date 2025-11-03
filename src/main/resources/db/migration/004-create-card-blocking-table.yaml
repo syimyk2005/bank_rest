@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-cards-for-blocking-table
+      author: syimyk
+      changes:
+        - createTable:
+            tableName: cards_for_blocking
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: card_number
+                  type: VARCHAR(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: comment
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: true
